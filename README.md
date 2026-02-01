@@ -50,6 +50,16 @@ Moduł `sonarqube_connector.py` pozwala na wyciąganie wyników skanowania bezpo
 ### 4. Recon & Port Discovery
 Integracja z narzędziami Kali Linux (nmap, masscan) opakowana w Pythonowy wrapper, umożliwiająca fingerprinting systemów MSSQL i serwerów IIS.
 
+### 5. AI-Augmented Vulnerability Research
+Toolkit integruje modele LLM (poprzez OpenAI/Anthropic API) do:
+* **Analizy kontekstowej API:** Model analizuje dokumentację Swagger/OpenAPI i sugeruje scenariusze ataków na logikę biznesową (np. manipulacja cenami, obchodzenie workflow).
+* **Automatycznej deobfuskacji:** Wykorzystanie AI do analizy zaciemnionego kodu JavaScript w poszukiwaniu ukrytych funkcji i kluczy.
+
+### 6. Headless Security Testing (Playwright)
+Wykorzystanie Playwright do automatyzacji testów bezpieczeństwa w przeglądarce:
+* **DOM-XSS Prober:** Automatyczne wstrzykiwanie payloadów w pola formularzy i monitorowanie zdarzeń DOM.
+* **MFA Automation:** Symulacja przepływów logowania z ominięciem zabezpieczeń front-endowych.
+
 ---
 
 ## 📈 Metodologia Ataku (Attack Workflow)
