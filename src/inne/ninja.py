@@ -22,7 +22,18 @@ def solve():
 
     if match:
         step_1_path = match.group(0)
+        full_url = urljoin(BASE_URL, step_1_path)
         print(f"[+] Znaleziono ścieżkę: {step_1_path}")
+        print(f"[*] 2. Wysyłam żądanie GET ")
+        
+        # Wykonujemy żądanie
+        response_step_1 = session.get(full_url)
+        
+        print("\n" + "="*40)
+        print(" ODPOWIEDŹ")
+        print("="*40)
+        print(response_step_1.text)
+        print("="*40)
         
     else:
         print("[-] Nie udało się znaleźć linku startowego. Sprawdź wyrażenie regularne.")
