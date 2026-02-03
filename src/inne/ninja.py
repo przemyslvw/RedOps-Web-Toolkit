@@ -3,6 +3,7 @@ import re
 from urllib.parse import urljoin
 import json
 import hashlib
+import base64
 
 # Konfiguracja
 BASE_URL = "https://task.zostansecurity.ninja/"
@@ -100,16 +101,53 @@ def solve():
         
         print("[*] 4. Wysyłam POST (Etap 3)...")
         step_3_url = urljoin(BASE_URL, "/?step=3")
-        
         # Requests automatycznie ustawi Content-Type: application/x-www-form-urlencoded
         # gdy użyjemy parametru 'data'
         response_step_3 = session.post(step_3_url, data=payload)
+
+        # --- FINAŁ: DEKODOWANIE MATRIOSZKI ---
+        print("\n[*] --- OBIERANIE CEBULI (Recursive Base64) ---")
         
-        print("\n" + "="*40)
-        print(" ODPOWIEDŹ:")
-        print("="*40)
-        print(response_step_3.text)
-        print("="*40)
+        full_response = response_step_3.text
+        
+        # 1. Wyciągamy TYLKO ciąg Base64, ignorując tekst gratulacyjny
+        # Szukamy ciągu zaczynającego się od "Vm0wd"
+
+        match = re.search(r'(Vm0wd[a-zA-Z0-9+/=\r\n]+)', full_response)
+        
+        if match:
+            # Usuwamy białe znaki i nowe linie z wyciągniętego ciągu
+            data = match.group(1).replace("\n", "").replace("\r", "").strip()
+        else:
+            print("[-] Nie udało się znaleźć ciągu Base64 w odpowiedzi.")
+            return
+
+        # 2. Pętla dekodująca       
+        iteration = 0
+        while True:
+            try:
+                # Próbujemy zdekodować
+                decoded_bytes = base64.b64decode(data)
+                decoded_str = decoded_bytes.decode('utf-8')
+                
+                # Sprawdzamy czy to już koniec (czy w tekście jest email / @ / nazwa firmy)
+                if "@" in decoded_str or "logicaltrust" in decoded_str.lower():
+                    print(f"\n[+] SUKCES po {iteration+1} dekodowaniach!")
+                    print("="*40)
+                    print(decoded_str.strip())
+                    print("="*40)
+                    break
+                
+                # Jeśli nie koniec, przygotowujemy dane do kolejnej pętli
+                data = decoded_str
+                iteration += 1
+                
+                if iteration % 5 == 0:
+                    print(f"[*] Dekodowanie warstwy {iteration}...")
+                    
+            except Exception as e:
+                print(f"[-] Przerwano dekodowanie (błąd lub koniec): {e}")
+                break
 
     else:
         print("[-] Błąd parsowania danych do Etapu 3.")
