@@ -28,6 +28,7 @@ Narzędzie jest zaprojektowane zgodnie z metodologią **OWASP WSTG** (Web Securi
 | **`Burp-Pro-Ext`** | Manual Ops | `Jython / Burp Suite API` | Automatyzacja bypassów WAF i niestandardowych nagłówków autoryzacji. |
 | **`Static-Scanner`** | SAST | `SonarQube API / Semgrep` | Integracja skanowania kodu źródłowego pod kątem Hardcoded Secrets i CVE. |
 | **`OWASP-Automator`** | Web Attack | `ffuf / Nuclei / Kali` | Automatyzacja testów pod kątem OWASP Top 10 (Injection, Broken Auth). |
+| **`Decoder-Utils`** | Utility | `Python` | Wielowarstwowe dekodowanie ciągów (Base64, Hex, ROT13, URL). |
 
 ---
 
@@ -59,6 +60,14 @@ Toolkit integruje modele LLM (poprzez OpenAI/Anthropic API) do:
 Wykorzystanie Playwright do automatyzacji testów bezpieczeństwa w przeglądarce:
 * **DOM-XSS Prober:** Automatyczne wstrzykiwanie payloadów w pola formularzy i monitorowanie zdarzeń DOM.
 * **MFA Automation:** Symulacja przepływów logowania z ominięciem zabezpieczeń front-endowych.
+
+### 7. Multi-Decoder Utility
+Narzędzie `src/decoder_utils.py` do szybkiej analizy zakodowanych ciągów znaków. Automatycznie próbuje zdekodować input przy użyciu:
+* **Base64 / Base32**
+* **Hex**
+* **URL Encoding (w tym double-encoding)**
+* **HTML Entities**
+* **ROT13**
 
 ---
 
