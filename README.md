@@ -62,12 +62,12 @@ Wykorzystanie Playwright do automatyzacji testów bezpieczeństwa w przeglądarc
 * **MFA Automation:** Symulacja przepływów logowania z ominięciem zabezpieczeń front-endowych.
 
 ### 7. Multi-Decoder Utility
-Narzędzie `src/decoder_utils.py` do szybkiej analizy zakodowanych ciągów znaków. Automatycznie próbuje zdekodować input przy użyciu:
-* **Base64 / Base32**
-* **Hex**
+Narzędzie `src/decoder_utils.py` do szybkiej analizy zakodowanych ciągów znaków. Obsługuje nowoczesne standardy webowe oraz klasyczne kodowanie:
+* **JWT (JSON Web Tokens):** Automatyczna detekcja i dekodowanie Header/Payload.
+* **Hash Identification:** Rozpoznawanie MD5, SHA-1, SHA-256 na podstawie długości.
+* **Base64 / Base32 / Hex**
 * **URL Encoding (w tym double-encoding)**
-* **HTML Entities**
-* **ROT13**
+* **HTML Entities / ROT13**
 
 ---
 
