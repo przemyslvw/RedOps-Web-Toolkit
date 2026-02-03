@@ -29,6 +29,7 @@ Narzędzie jest zaprojektowane zgodnie z metodologią **OWASP WSTG** (Web Securi
 | **`Static-Scanner`** | SAST | `SonarQube API / Semgrep` | Integracja skanowania kodu źródłowego pod kątem Hardcoded Secrets i CVE. |
 | **`OWASP-Automator`** | Web Attack | `ffuf / Nuclei / Kali` | Automatyzacja testów pod kątem OWASP Top 10 (Injection, Broken Auth). |
 | **`Decoder-Utils`** | Utility | `Python` | Wielowarstwowe dekodowanie ciągów (Base64, Hex, ROT13, URL). |
+| **`Payload-Enumerator`** | Web Attack | `Python / Requests` | Automatyzacja wysyłania payloadów Base64 i ekstrakcja danych (e-mail) z odpowiedzi. |
 
 ---
 
@@ -68,6 +69,12 @@ Narzędzie `src/decoder_utils.py` do szybkiej analizy zakodowanych ciągów znak
 * **Base64 / Base32 / Hex**
 * **URL Encoding (w tym double-encoding)**
 * **HTML Entities / ROT13**
+
+### 8. Payload Enumerator
+Skrypt `src/payload_enumerator.py` automatyzujący testowanie API poprzez masowe wysyłanie payloadów:
+* **Automatyzacja:** Pętla generująca unikalne payloady Base64.
+* **Data Extraction:** Analiza odpowiedzi pod kątem wycieku danych (e-mail) przy użyciu Regex.
+* **Customizable:** Łatwa konfiguracja targetu i struktury żądania.
 
 ---
 
