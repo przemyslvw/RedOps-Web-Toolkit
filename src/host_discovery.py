@@ -162,6 +162,7 @@ def start_scanner(subnet=None):
             sniffer.close()
         t.join()
         print(f"[*] Scan complete. Found {len(active_hosts)} hosts.")
+        return sorted(list(active_hosts))
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -169,4 +170,7 @@ if __name__ == "__main__":
     else:
         target_subnet = None
     
-    start_scanner(target_subnet)
+    hosts = start_scanner(target_subnet)
+    # The start_scanner already prints "Host Up" messages, so we don't need to reprint here
+    # unless we want a final summary list.
+
