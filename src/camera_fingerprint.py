@@ -6,16 +6,17 @@ from concurrent.futures import ThreadPoolExecutor
 from host_discovery import start_scanner
 
 # Target ports for cameras
-CAMERA_PORTS = [554, 80, 8080, 81, 8000, 37777, 1935]
+CAMERA_PORTS = [554, 80, 8080, 81, 8000, 37777, 1935, 54321, 32100]
 
 # Common Camera MAC OUIs (Prefixes)
 # You can expand this list with more manufacturers
 CAMERA_OUIS = {
+    # Existing
     "00:40:8C": "Axis Communications",
     "00:0F:7C": "Dahua Technology",
     "E0:50:8B": "Dahua Technology",
     "10:12:FB": "Dahua Technology",
-    "4C:11:BF": "Dahua Technology", # Specific sub-brands
+    "4C:11:BF": "Dahua Technology", 
     "80:69:1A": "Hikvision",
     "44:E0:41": "Hikvision",
     "1C:B0:94": "Hikvision",
@@ -24,9 +25,26 @@ CAMERA_OUIS = {
     "00:62:6E": "Foscam",
     "00:80:F0": "Panasonic",
     "00:02:D1": "Vivotek",
-    "00:13:07": "Paragon Software (Often used in embedded cams)",
+    "00:13:07": "Paragon Software",
     "B0:C5:54": "D-Link",
     "00:1B:11": "D-Link",
+    # Xiaomi / Yi / IoT
+    "E4:AA:EC": "Xiaomi",
+    "64:09:80": "Xiaomi",
+    "F0:B4:29": "Xiaomi",
+    "50:EC:50": "Xiaomi",
+    "7C:49:EB": "Xiaomi",
+    "00:9E:C8": "Xiaomi",
+    "28:6C:07": "Xiaomi",
+    "AC:F7:F3": "Xiaomi",
+    "F8:24:41": "Xiaomi",
+    "18:D9:D6": "Xiaomi (Yi)",
+    # Generic / Tuya / Espressif (Low cost IoT chips)
+    "A0:20:A6": "Espressif (ESP32)",
+    "24:6F:28": "Espressif",
+    "84:F3:EB": "Espressif",
+    "5C:CF:7F": "Espressif",
+    "D8:BF:C0": "Espressif",
 }
 
 def get_mac_address(ip_address):
@@ -49,7 +67,7 @@ def check_port(ip, port):
     Checks if a TCP port is open.
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(1.0)
+    sock.settimeout(2.0) # Increased timeout
     result = sock.connect_ex((ip, port))
     sock.close()
     return port if result == 0 else None
@@ -59,7 +77,7 @@ def scan_ports(ip):
     Scans the target IP for common camera ports.
     """
     open_ports = []
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor: # Increased workers
         futures = [executor.submit(check_port, ip, port) for port in CAMERA_PORTS]
         for future in futures:
             port = future.result()
@@ -125,17 +143,24 @@ def main():
         print(f"{host:<16} | {str(mac):<18} | {vendor:<20} | {ports_str}")
 
         # Heuristic for "Likely Camera"
-        # 1. Known Camera Vendor
+        # 1. Known Camera Vendor (Even if no ports open - cloud cams)
         # 2. Open RTSP (554) or 8000 (Hikvision)
-        if vendor != "Unknown" or 554 in ports or 8000 in ports:
-            potential_cameras.append((host, ports))
+        # 3. Open port 54321 or 32100 (Common UDP/TCP control ports for some cams)
+        is_known_vendor = vendor != "Unknown"
+        has_camera_ports = any(p in ports for p in [554, 8000, 37777, 54321, 32100])
+        
+        if is_known_vendor or has_camera_ports:
+            status = "Known Vendor" if is_known_vendor else "Camera Ports Found"
+            if is_known_vendor and has_camera_ports:
+                status = "Vendor + Ports"
+            potential_cameras.append((host, ports, vendor))
 
     print("-" * 80)
     if potential_cameras:
         print(f"\n[+] Found {len(potential_cameras)} potential cameras!")
-        for cam_ip, cam_ports in potential_cameras:
-            print(f"    -> {cam_ip} (Ports: {cam_ports})")
-            print(f"       Try: rtsp://{cam_ip}:554/")
+        for cam_ip, cam_ports, cam_vendor in potential_cameras:
+            print(f"    -> {cam_ip} [{cam_vendor}]")
+            print(f"       Ports: {cam_ports}")
     else:
         print("\n[-] No obvious cameras identified.")
 
