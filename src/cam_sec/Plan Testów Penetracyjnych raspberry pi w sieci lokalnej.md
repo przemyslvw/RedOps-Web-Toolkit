@@ -1,23 +1,70 @@
-# Plan Testów Penetracyjnych raspberry pi w sieci lokalnej
+# Plan Audytu Bezpieczeństwa Raspberry Pi w Sieci Lokalnej
 
-Aby wykonać test podatności i przejęcia kontroli nad urządzeniem w sieci domowej, inspirowany atakiem na samochód opisanym w książce, musisz dostosować narzędzia do środowiska sieciowego. Charlie Miller, autor przedmowy, wspomniał, że do zdalnego przejęcia kontroli nad Jeepem Cherokee (sterowanie kierownicą, hamulcami) użył modułu dbus-python, który pozwalał na komunikację z wewnętrzną magistralą samochodu.
-W przypadku urządzeń w sieci domowej (IoT, routery, kamery), zamiast magistrali samochodowej, będziesz operować na protokołach sieciowych (TCP/UDP, HTTP). Opierając się na rozdziałach książki "Black Hat Python", oto jak możesz zbudować podobny proces testowania przy użyciu Pythona:
-1. Rozpoznanie celów (Skaner hostów) Zanim przejmiesz kontrolę, musisz zidentyfikować urządzenia. W sieci domowej możesz stworzyć skaner wykrywający aktywne hosty.
-• Książka opisuje budowę skanera wykorzystującego protokół UDP. Wysyłasz datagramy UDP na zamknięte porty i oczekujesz odpowiedzi ICMP (Destination Unreachable), co potwierdza obecność urządzenia.
-• Możesz użyć modułu ipaddress do iteracji przez całą podsieć oraz socket do wysyłania pakietów.
-2. Analiza ruchu (Sniffing) Aby zrozumieć, jak "rozmawiać" z urządzeniem (np. jak wysłać komendę "wyłącz światło"), musisz podsłuchać jego komunikację.
-• Możesz napisać sniffer używając surowych gniazd (socket z SOCK_RAW), aby przechwytywać i dekodować nagłówki IP oraz ICMP, co pozwoli zobaczyć, kto z kim się komunikuje.
-• Bardziej zaawansowanym podejściem jest użycie biblioteki Scapy. Pozwala ona na łatwe przechwytywanie pakietów (funkcja sniff) i ich analizę.
-3. Przechwytywanie komunikacji (Man-in-the-Middle) Aby przejąć kontrolę nad urządzeniem, które komunikuje się z chmurą lub aplikacją mobilną, możesz użyć ataku ARP Poisoning.
-• Książka opisuje tworzenie skryptu arper.py przy użyciu Scapy. Pozwala to "otruć" tablicę ARP urządzenia docelowego i bramy sieciowej, zmuszając ruch do przepływu przez Twój komputer.
-• Dzięki temu możesz analizować pakiety (np. wyciągać obrazy z ruchu HTTP) lub modyfikować je w locie.
-4. Interakcja i wysyłanie komend Gdy już znasz protokół, możesz napisać klienta, który wyśle żądane komendy.
-• TCP/UDP: Jeśli urządzenie używa prostych protokołów, możesz użyć modułu socket do stworzenia klienta TCP lub UDP i wysłania odpowiednich bajtów danych.
-• SSH: Jeśli urządzenie (np. Raspberry Pi lub router) ma otwarty port SSH, możesz użyć biblioteki Paramiko. Książka pokazuje, jak stworzyć skrypt (np. ssh_cmd.py), który łączy się z serwerem, uwierzytelnia i wykonuje polecenia.
-• Web/HTTP: Jeśli urządzenie ma panel webowy, możesz użyć biblioteki requests do interakcji z API lub formularzami, a nawet przeprowadzić atak brute-force na hasło logowania, jak opisano w przypadku WordPressa.
-5. Utrzymanie dostępu (Trojan) Jeśli uda Ci się uzyskać dostęp do systemu operacyjnego urządzenia (np. komputera z Windows), książka opisuje tworzenie trojana sterowanego przez GitHub (github3.py). Pozwala to na zdalne wysyłanie modułów i odbieranie wyników bez bezpośredniego połączenia.
-Podsumowanie narzędzi z książki do Twojego celu:
-• socket: Do podstawowej komunikacji sieciowej i skanowania.
-• scapy: Do manipulacji pakietami i ataków ARP.
-• paramiko: Do ataków i sterowania przez SSH.
-• requests: Do manipulacji urządzeniami z interfejsem HTTP.
+## 1. Cel Audytu
+Weryfikacja poziomu bezpieczeństwa urządzenia Raspberry Pi pracującego w sieci lokalnej. Celem jest identyfikacja słabych punktów konfiguracji, domyślnych ustawień oraz potencjalnych wektorów ataku, które umożliwiają atakującemu dostęp do poufnych danych lub przejęcie kontroli nad systemem.
+
+## 2. Zakres Testów
+Audyt obejmuje wyłącznie urządzenia Raspberry Pi w sieci lokalnej, do której audytor posiada uprawnienia.
+**Główne wektory ataku:**
+- Przejęcie informacji (Information Gathering / Interception)
+- Przejęcie kontroli (Exploitation / Access Control)
+
+---
+
+## 3. Faza 1: Przejęcie Informacji (Information Gathering)
+Na tym etapie gromadzimy informacje o celu bez ingerencji w jego działanie (lub z minimalną interakcją).
+
+### 3.1. Wykrywanie i Identyfikacja (Discovery)
+Zlokalizowanie Raspberry Pi w sieci lokalnej.
+*   **Techniki:**
+    *   **Skanowanie sieci (ARP/Ping Scan):** Wykorzystanie biblioteki **Scapy** do wysyłania zapytań ARP w celu wykrycia aktywnych hostów.
+    *   Analiza adresów MAC (OUI: `B8:27:EB`, `DC:A6:32`, `E4:5F:01`, `28:CD:C1`).
+    *   Pasywny nasłuch ruchu broadcast/multicast (mDNS, SSDP).
+
+### 3.2. Skanowanie Usług (Enumeration)
+Identyfikacja uruchomionych usług i otwartych portów.
+*   **Kluczowe porty:**
+    *   `22` (SSH) - Weryfikacja banneru, wersja OpenSSH.
+    *   `80/443/8080` (HTTP/HTTPS) - Serwery WWW, panele kamer, OctoPrint, Pi-hole.
+    *   `5900` (VNC) - Zdalny pulpit.
+    *   `1883` (MQTT) - Komunikacja IoT (Home Assistant).
+    *   `445` (SMB) - Udostępnianie plików.
+
+### 3.3. Przechwytywanie Ruchu (Sniffing & MITM)
+Przechwycenie haseł, tokenów lub niezaszyfrowanych danych.
+*   **Techniki:**
+    *   **ARP Spoofing (Scapy):** Użycie **Scapy** do zatruwania tablic ARP (ARP Poisoning), co pozwoli na przekierowanie ruchu ofiary przez nasz komputer.
+    *   **Analiza pakietów:** Wykorzystanie `tcpdump`, `Wireshark` lub sniffera w **Scapy** do analizy przechwyconego ruchu.
+
+---
+
+## 4. Faza 2: Przejęcie Kontroli (Taking Control)
+Aktywne próby uzyskania dostępu do systemu operacyjnego lub panelu administracyjnego.
+
+### 4.1. Ataki na Uwierzytelnianie (Brute-Force / Default Creds)
+*   **SSH / VNC / HTTP:**
+    *   Sprawdzenie domyślnych poświadczeń (najczęstsza podatność RPi):
+        *   User: `pi`, Pass: `raspberry`
+        *   User: `admin`, Pass: `admin` / `password`
+    *   Słownikowy atak siłowy na usługę SSH (np. przy użyciu Hydry lub własnego skryptu Python/Paramiko).
+
+### 4.2. Eksploitacja Usług (Exploitation)
+*   **Znane podatności (CVE):** Sprawdzenie wersji usług wykrytych w Fazie 1 pod kątem publicznych exploitów.
+*   **Misconfiguration:**
+    *   Otwarty MQTT bez autoryzacji (możliwość wstrzykiwania poleceń do automatyki domowej).
+    *   VNC bez hasła.
+    *   System plików NFS/SMB dostępny bez logowania.
+
+### 4.3. Uzyskanie Powłoki (Shell)
+*   Po udanym uwierzytelnieniu (SSH) lub eksploitacji, celem jest uzyskanie interaktywnej powłoki systemowej.
+*   Weryfikacja uprawnień (`whoami`, `sudo -l`) – sprawdzenie, czy mamy dostęp `root` (domyślny użytkownik `pi` często ma sudo bez hasła).
+
+---
+
+## 5. Plan Działania Krok po Kroku (Do wykonania w kolejnych etapach)
+
+1.  **Przygotowanie środowiska:** Uruchomienie skryptów rozpoznawczych (Python: `scapy`, `nmap` module).
+2.  **Skanowanie:** Zidentyfikowanie IP Raspberry Pi.
+3.  **Sniffing:** Uruchomienie ataku ARP Spoofing i próba przechwycenia logowania (symulacja).
+4.  **Brute-Force SSH:** Uruchomienie skryptu łamiącego hasła na wykrytym IP.
+5.  **Exfiltration:** Po wbiciu się, pobranie "tajnego" pliku z urządzenia.
