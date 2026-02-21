@@ -20,8 +20,6 @@ def audit_headers(url):
         "Referrer-Policy": "Kontrola wycieku danych w nagłówku Referer",
         "Permissions-Policy": "Kontrola dostępu do API przeglądarki",
         "X-Permitted-Cross-Domain-Policies": "Blokada polityk Adobe/Flash",
-        
-        # --- NOWE (Z Twojego zrzutu) ---
         "Cross-Origin-Opener-Policy": "Izolacja kontekstu przeglądania (COOP) - ochrona przed atakami XS-Leaks",
         "Cross-Origin-Embedder-Policy": "Wymusza ładowanie tylko bezpiecznych zasobów (COEP)",
         "Cross-Origin-Resource-Policy": "Ochrona zasobów przed ładowaniem przez obce serwisy (CORP)",
